@@ -10,7 +10,7 @@ sys.path.append('/home/chanthaphan/project')
 os.environ['OLLAMA_HOST'] = '172.25.96.1:11434'
 os.environ['VLLM_HOST'] = 'localhost:8000'
 
-from chat_gui import LLMGUIChat
+from src.interfaces.web_chat import LLMGUIChat
 
 def test_streaming():
     """Test the streaming functionality"""

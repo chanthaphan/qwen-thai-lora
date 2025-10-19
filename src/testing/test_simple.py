@@ -22,7 +22,7 @@ def test_thai_model():
         from peft import PeftModel
         
         base_model_name = "Qwen/Qwen2.5-1.5B-Instruct"
-        lora_model_path = "./qwen_thai_lora"
+        lora_model_path = "./models/qwen_thai_lora"
         
         print("📁 Loading tokenizer...")
         tokenizer = AutoTokenizer.from_pretrained(base_model_name, trust_remote_code=True)

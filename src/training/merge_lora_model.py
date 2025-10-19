@@ -14,8 +14,8 @@ def merge_lora_model():
     """Merge LoRA adapter with base model and save the merged model"""
     
     base_model_name = "Qwen/Qwen2.5-1.5B-Instruct"
-    lora_model_path = "./qwen_thai_lora"
-    merged_model_path = "./qwen_thai_merged"
+    lora_model_path = "./models/qwen_thai_lora"
+    merged_model_path = "./models/qwen_thai_merged"
     
     # Check if LoRA model exists
     if not Path(lora_model_path).exists():
