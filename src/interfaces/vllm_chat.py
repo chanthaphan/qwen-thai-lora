@@ -448,6 +448,25 @@ def main():
     # Initialize chat
     chat = VLLMChat()
     
+    # Check if vLLM server is running
+    try:
+        response = requests.get(chat.models_url, timeout=5)
+        if response.status_code != 200:
+            raise requests.exceptions.RequestException("Server not responding")
+    except requests.exceptions.RequestException as e:
+        print("ERROR: Cannot connect to vLLM server!")
+        print(f"Details: {e}")
+        print("")
+        print("Solutions:")
+        print("1. Start vLLM server first:")
+        print("   ./manage.sh host-vllm")
+        print("")
+        print("2. Or use other chat interfaces:")
+        print("   ./manage.sh chat-ollama    # Ollama chat")
+        print("   ./manage.sh chat-web       # Web-based chat")
+        print("   ./manage.sh host-gui       # Thai model GUI")
+        return 1
+    
     # Test connection
     print("🔗 Testing connection to vLLM server...")
     conn_status = chat.test_connection()
