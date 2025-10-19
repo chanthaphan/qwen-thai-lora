@@ -21,10 +21,10 @@ class ThaiModelInterface:
         """Load the fine-tuned Thai model"""
         try:
             base_model_name = "Qwen/Qwen2.5-1.5B-Instruct"
-            lora_model_path = "./qwen_thai_lora"
+            lora_model_path = "./models/qwen_thai_lora"
             
             if not Path(lora_model_path).exists():
-                return False, "❌ Model not found at ./qwen_thai_lora. Please train the model first."
+                return False, "❌ Model not found at ./models/qwen_thai_lora. Please train the model first."
             
             print("Loading Thai model...")
             
@@ -271,10 +271,10 @@ def main():
     print("🚀 Starting Thai Model Web Interface...")
     
     # Check if model exists
-    model_path = Path("./qwen_thai_lora")
+    model_path = Path("./models/qwen_thai_lora")
     if not model_path.exists():
         print("❌ Thai model not found!")
-        print("Please run 'python finetune_quen3_lora.py' first to train the model.")
+        print("Please run './manage.sh train' first to train the model.")
         sys.exit(1)
     
     print("📁 Model found at:", model_path)
