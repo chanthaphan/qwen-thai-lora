@@ -1,0 +1,17 @@
+[Unit]
+Description=Thai Model FastAPI Server
+After=network.target
+
+[Service]
+Type=simple
+User=chanthaphan
+WorkingDirectory=/home/chanthaphan/project
+Environment=PATH=/home/chanthaphan/project/llm-env/bin
+ExecStart=/home/chanthaphan/project/llm-env/bin/python /home/chanthaphan/project/src/hosting/fastapi_server.py
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

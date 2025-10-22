@@ -28,17 +28,17 @@ def setup_thai_model_server():
     """Setup and run FastAPI server with your fine-tuned Thai model"""
     
     # Check if model exists
-    model_path = "./qwen_thai_lora"
+    model_path = "./models/qwen_thai_lora"
     if not Path(model_path).exists():
-        print("❌ Thai LoRA model not found at ./qwen_thai_lora")
-        print("Please run finetune_quen3_lora.py first to create the model")
+        print("❌ Thai LoRA model not found at ./models/qwen_thai_lora")
+        print("Please run the training module first to create the model")
         return 1
     
     # Check for adapter files
     adapter_config = Path(model_path) / "adapter_config.json"
     if not adapter_config.exists():
         print("❌ LoRA adapter config not found")
-        print("Make sure ./qwen_thai_lora contains adapter_config.json")
+        print("Make sure ./models/qwen_thai_lora contains adapter_config.json")
         return 1
     
     print("🚀 Starting FastAPI server with your Thai fine-tuned model...")
@@ -71,7 +71,7 @@ def setup_thai_model_server():
     
     # FastAPI command to serve the Thai model
     fastapi_command = [
-        venv_python, "thai_model_api.py"
+        venv_python, "src/hosting/fastapi_server.py"
     ]
     
     print("🔧 Command:", " ".join(fastapi_command))

@@ -1,0 +1,14 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: 'thai-model-api'
+    static_configs:
+      - targets: ['thai-model-api:8001']
+    scrape_interval: 5s
+    metrics_path: '/metrics'
+
+  - job_name: 'nginx'
+    static_configs:
+      - targets: ['nginx:80']
+    scrape_interval: 10s

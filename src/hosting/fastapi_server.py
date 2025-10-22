@@ -50,7 +50,7 @@ class ThaiModelAPI:
         self.tokenizer = None
         self.model_loaded = False
         self.base_model_name = "Qwen/Qwen2.5-1.5B-Instruct"
-        self.lora_model_path = "./qwen_thai_lora"
+        self.lora_model_path = "./models/qwen_thai_lora"
     
     async def load_model(self):
         """Load the Thai model"""
@@ -266,10 +266,10 @@ def main():
     print()
     
     # Check if model exists
-    model_path = Path("./qwen_thai_lora")
+    model_path = Path("./models/qwen_thai_lora")
     if not model_path.exists():
-        print("❌ Thai model not found at ./qwen_thai_lora")
-        print("Please run 'python finetune_quen3_lora.py' first to train the model.")
+        print("❌ Thai model not found at ./models/qwen_thai_lora")
+        print("Please run the training module first to create the model.")
         return 1
     
     print("✅ Thai model found")
@@ -280,7 +280,7 @@ def main():
     
     # Run server
     uvicorn.run(
-        "thai_model_api:app",
+        app,
         host="0.0.0.0",
         port=8001,
         reload=False,
