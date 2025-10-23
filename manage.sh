@@ -76,39 +76,34 @@ cmd_setup() {
     print_color $GREEN "Environment setup completed!"
 }
 
-cmd_train() {
-    print_color $BLUE "Starting Thai model fine-tuning..."
-    check_environment
-    cd $PROJECT_ROOT
-    $VENV_PATH src/training/finetune_thai_model.py
+train() {
+    print_color $GREEN "Starting Thai model fine-tuning..."
+    cd "$PROJECT_ROOT"
+    $VENV_PATH -m thai_model.training.finetune_thai_model
 }
 
-cmd_test() {
-    print_color $BLUE "Running comprehensive model tests..."
-    check_environment
-    cd $PROJECT_ROOT
-    $VENV_PATH src/testing/test_model.py
+test() {
+    print_color $GREEN "Running model tests..."
+    cd "$PROJECT_ROOT"
+    $VENV_PATH -m thai_model.tests.test_model
 }
 
-cmd_test_simple() {
-    print_color $BLUE "Running simple model test..."
-    check_environment
-    cd $PROJECT_ROOT
-    $VENV_PATH src/testing/test_simple.py
+test_simple() {
+    print_color $GREEN "Running simple model test..."
+    cd "$PROJECT_ROOT"
+    $VENV_PATH -m thai_model.tests.test_simple
 }
 
-cmd_host_gui() {
-    print_color $BLUE "Starting Gradio web interface..."
-    check_environment
-    cd $PROJECT_ROOT
-    $VENV_PATH src/interfaces/gradio_gui.py
+host_gui() {
+    print_color $GREEN "Starting Gradio web interface..."
+    cd "$PROJECT_ROOT"
+    $VENV_PATH -m thai_model.interfaces.gradio_gui
 }
 
-cmd_host_api() {
-    print_color $BLUE "Starting FastAPI server..."
-    check_environment
-    cd $PROJECT_ROOT
-    $VENV_PATH src/hosting/fastapi_server.py
+host_api() {
+    print_color $GREEN "Starting FastAPI server..."
+    cd "$PROJECT_ROOT"
+    $VENV_PATH scripts/api_server.py
 }
 
 cmd_host_vllm() {
@@ -135,32 +130,29 @@ cmd_host_vllm() {
         --served-model-name thai-model
 }
 
-cmd_chat_ollama() {
-    print_color $BLUE "Starting Ollama chat application..."
-    check_environment
-    cd $PROJECT_ROOT
-    $VENV_PATH src/interfaces/ollama_chat.py
+chat_ollama() {
+    print_color $GREEN "Starting Ollama chat application..."
+    cd "$PROJECT_ROOT"
+    $VENV_PATH -m thai_model.interfaces.ollama_chat
 }
 
-cmd_chat_vllm() {
-    print_color $BLUE "Starting vLLM chat application..."
-    check_environment
-    cd $PROJECT_ROOT
-    $VENV_PATH src/interfaces/vllm_chat.py
+chat_vllm() {
+    print_color $GREEN "Starting vLLM chat application..."
+    cd "$PROJECT_ROOT"
+    $VENV_PATH -m thai_model.interfaces.vllm_chat
 }
 
-cmd_chat_web() {
-    print_color $BLUE "Starting web-based multi-backend chat..."
-    check_environment
-    cd $PROJECT_ROOT
-    $VENV_PATH src/interfaces/web_chat.py
+chat_web() {
+    print_color $GREEN "Starting web-based multi-backend chat..."
+    cd "$PROJECT_ROOT"
+    $VENV_PATH -m thai_model.interfaces.web_chat
 }
 
 cmd_merge_model() {
     print_color $BLUE "Merging LoRA with base model..."
     check_environment
     cd $PROJECT_ROOT
-    $VENV_PATH src/training/merge_lora_model.py
+    $VENV_PATH -m thai_model.training.merge_lora_model
 }
 
 cmd_docker_build() {
@@ -230,23 +222,23 @@ case "${1:-help}" in
         ;;
     train)
         print_header
-        cmd_train
+        train
         ;;
     test)
         print_header
-        cmd_test
+        test
         ;;
     test-simple)
         print_header
-        cmd_test_simple
+        test_simple
         ;;
     host-gui)
         print_header
-        cmd_host_gui
+        host_gui
         ;;
     host-api)
         print_header
-        cmd_host_api
+        host_api
         ;;
     host-vllm)
         print_header
@@ -254,15 +246,15 @@ case "${1:-help}" in
         ;;
     chat-ollama)
         print_header
-        cmd_chat_ollama
+        chat_ollama
         ;;
     chat-vllm)
         print_header
-        cmd_chat_vllm
+        chat_vllm
         ;;
     chat-web)
         print_header
-        cmd_chat_web
+        chat_web
         ;;
     merge-model)
         print_header
