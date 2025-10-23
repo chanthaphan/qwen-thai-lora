@@ -1,0 +1,95 @@
+# Multi-stage Dockerfile for Thai Model API (CPU-Only Version)
+# ==============================================================
+
+# Stage 1: Base image with Python
+FROM ubuntu:22.04 as base
+
+# Set environment variables
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    python3 \
+    python3-pip \
+    python3-venv \
+    curl \
+    wget \
+    git \
+    build-essential \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create Python virtual environment
+RUN python3 -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Stage 2: Install Python dependencies
+FROM base as dependencies
+
+# Copy requirements file
+COPY requirements.txt /tmp/requirements.txt
+
+# Install Python packages
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r /tmp/requirements.txt && \
+    pip install --no-cache-dir torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+
+# Stage 3: Application
+FROM dependencies as application
+
+# Set working directory
+WORKDIR /app
+
+# Create application user for security
+RUN groupadd -r appuser && useradd -r -g appuser appuser
+
+# Create necessary directories
+RUN mkdir -p /app/src /app/models /app/config /app/logs /app/.cache && \
+    chown -R appuser:appuser /app
+
+# Copy application code
+COPY --chown=appuser:appuser src/ /app/src/
+COPY --chown=appuser:appuser config/ /app/config/
+COPY --chown=appuser:appuser *.py /app/
+
+# Copy scripts
+COPY --chown=appuser:appuser manage.sh /app/
+RUN chmod +x /app/manage.sh
+
+# Set environment variables for the application
+ENV PYTHONPATH=/app
+ENV HF_HOME=/app/.cache/huggingface
+ENV TORCH_HOME=/app/.cache/torch
+
+# Create startup script
+RUN echo '#!/bin/bash\n\
+set -e\n\
+echo "🚀 Starting Thai Model API Server..."\n\
+echo "📍 Working directory: $(pwd)"\n\
+echo "🐍 Python path: $PYTHONPATH"\n\
+echo "💾 Cache directory: $HF_HOME"\n\
+\n\
+# Check if models directory exists\n\
+if [ ! -d "/app/models" ]; then\n\
+    echo "⚠️  Models directory not found, creating..."\n\
+    mkdir -p /app/models\n\
+fi\n\
+\n\
+# Start the FastAPI server\n\
+exec python -m src.hosting.fastapi_server\n\
+' > /app/entrypoint.sh && chmod +x /app/entrypoint.sh
+
+# Switch to non-root user
+USER appuser
+
+# Expose port
+EXPOSE 8001
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=5 \
+    CMD curl -f http://localhost:8001/health || exit 1
+
+# Set entrypoint
+ENTRYPOINT ["/app/entrypoint.sh"]
