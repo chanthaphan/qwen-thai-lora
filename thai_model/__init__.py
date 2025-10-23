@@ -20,10 +20,10 @@ __version__ = "1.0.0"
 __author__ = "Thai Model Team"
 __license__ = "MIT"
 
-# Core imports
-from .core import ThaiModel, ModelConfig
-from .api import create_api_server
-from .interfaces import ChatInterface, WebInterface
+# Core imports - make them lazy to avoid import errors
+# from .core import ThaiModel, ModelConfig
+# from .api import create_api_server
+# from .interfaces import ChatInterface, WebInterface
 
 __all__ = [
     "ThaiModel",
