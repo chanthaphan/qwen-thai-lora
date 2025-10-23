@@ -60,22 +60,22 @@ This interactive learning system will guide you through mastering:
         "4": {
             "title": "📈 Module 2.2: Model Training & Fine-tuning",
             "script": "module_2_2_training.py",
-            "description": "Learn model training pipelines (Coming Soon)"
+            "description": "Learn model training pipelines and LoRA techniques"
         },
         "5": {
             "title": "🚀 Module 3.1: FastAPI Fundamentals", 
             "script": "module_3_1_fastapi.py",
-            "description": "Master modern API development (Coming Soon)"
+            "description": "Master modern API development with async/await"
         },
         "6": {
             "title": "⚡ Module 3.2: Advanced API Features",
             "script": "module_3_2_advanced_api.py", 
-            "description": "Streaming, auth, and production features (Coming Soon)"
+            "description": "Streaming, auth, rate limiting, and production features"
         },
         "7": {
             "title": "🐳 Module 4.1: Docker Mastery",
             "script": "module_4_1_docker.py",
-            "description": "Containerization and orchestration (Coming Soon)"
+            "description": "Containerization, multi-stage builds, and orchestration"
         },
         "8": {
             "title": "🏭 Module 4.2: Production Deployment",
