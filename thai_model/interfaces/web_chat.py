@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Gradio GUI for LLM Chat App
-A web-based interface for chatting with Ollama and vLLM models
+A web-based interface for chatting with Ollama, vLLM, and OpenAI models
 """
 import gradio as gr
 import requests
@@ -10,6 +10,13 @@ import json
 import sys
 from typing import List, Dict, Tuple, Optional
 from datetime import datetime
+
+# OpenAI import (optional)
+try:
+    import openai
+    OPENAI_AVAILABLE = True
+except ImportError:
+    OPENAI_AVAILABLE = False
 
 class LLMGUIChat:
     def __init__(self):
@@ -24,15 +31,23 @@ class LLMGUIChat:
         self.vllm_chat_url = f"http://{self.vllm_host}/v1/chat/completions"
         self.vllm_models_url = f"http://{self.vllm_host}/v1/models"
         
+        # OpenAI configuration
+        self.openai_client = None
+        if OPENAI_AVAILABLE and os.getenv("OPENAI_API_KEY"):
+            try:
+                self.openai_client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+            except Exception as e:
+                print(f"Warning: Failed to initialize OpenAI client: {e}")
+        
         # Model and conversation state
-        self.available_models = {"ollama": [], "vllm": []}
+        self.available_models = {"ollama": [], "vllm": [], "openai": []}
         self.current_model = "llama3.1:8b"
         self.conversation_history = []
         self.show_reasoning = False
         self.reasoning_mode = "simple"
         self.stream_response = True
         
-        # Load available models from both backends
+        # Load available models from all backends
         self._load_available_models()
         
         self.reasoning_prompts = {
@@ -78,7 +93,7 @@ Question: """
         }
     
     def _load_available_models(self):
-        """Load available models from both Ollama and vLLM"""
+        """Load available models from Ollama, vLLM, and OpenAI"""
         # Load Ollama models
         self.available_models["ollama"] = []
         try:
@@ -103,7 +118,26 @@ Question: """
             pass
         
         if not self.available_models["vllm"]:
-            self.available_models["vllm"] = ["Qwen/Qwen3-4B-Instruct-2507"]  # Default fallback
+            self.available_models["vllm"] = ["thai-model"]  # Default fallback
+        
+        # Load OpenAI models
+        self.available_models["openai"] = []
+        if self.openai_client:
+            try:
+                response = self.openai_client.models.list()
+                all_models = [model.id for model in response.data]
+                # Filter to commonly used models and GPT-5 series
+                preferred_models = ['gpt-4o', 'gpt-4o-mini', 'gpt-5', 'gpt-5-mini', 'gpt-5-pro', 'gpt-4', 'gpt-4-turbo', 'gpt-3.5-turbo']
+                available_preferred = [m for m in preferred_models if m in all_models]
+                # Add other GPT models but limit to avoid clutter
+                other_gpt_models = [m for m in all_models if m not in preferred_models and 'gpt' in m and not m.startswith('gpt-3.5-turbo-instruct')]
+                self.available_models["openai"] = available_preferred + sorted(other_gpt_models)[:10]
+            except Exception as e:
+                print(f"Warning: Failed to load OpenAI models: {e}")
+        
+        if not self.available_models["openai"]:
+            # Default OpenAI models if API call fails or no API key
+            self.available_models["openai"] = ["gpt-4o", "gpt-4o-mini", "gpt-5", "gpt-5-mini", "gpt-4", "gpt-3.5-turbo"]
     
     def _build_context(self) -> str:
         """Build conversation context from history"""
@@ -142,8 +176,14 @@ Question: """
         try:
             if self.backend == "ollama":
                 yield from self._stream_ollama(message, history)
-            else:  # vllm
+            elif self.backend == "vllm":
                 yield from self._stream_vllm(message, history)
+            elif self.backend == "openai":
+                yield from self._stream_openai(message, history)
+            else:
+                error_msg = f"Unknown backend: {self.backend}"
+                history[-1]["content"] = f"❌ {error_msg}"
+                yield "", history, error_msg
                 
         except requests.exceptions.RequestException as e:
             error_msg = f"Connection error: {e}"
@@ -267,6 +307,115 @@ Question: """
         self.conversation_history.append({"role": "assistant", "content": ai_response})
         yield "", history, f"✅ Response completed using vLLM: {self.current_model}"
     
+    def _stream_openai(self, message: str, history: List[Dict]):
+        """Stream response from OpenAI backend"""
+        if not self.openai_client:
+            error_msg = """🔑 OpenAI API Key Required
+
+To use OpenAI models, please set your API key:
+
+1. **Get API Key**: Visit https://platform.openai.com/api-keys
+2. **Set Environment Variable**: 
+   ```bash
+   export OPENAI_API_KEY="your-api-key-here"
+   ```
+3. **Restart Web Interface**: Close and restart the web interface
+
+💡 **Tip**: You can still use the Ollama and vLLM backends without an API key!"""
+            history[-1]["content"] = f"❌ {error_msg}"
+            yield "", history, "❌ OpenAI API key required"
+            return
+        
+        # Prepare messages for OpenAI
+        messages = []
+        
+        # Add conversation history
+        for msg in self.conversation_history[:-1]:  # Exclude the current message we just added
+            messages.append(msg)
+        
+        # Add reasoning prompt if enabled
+        if self.show_reasoning:
+            reasoning_prompt = self.reasoning_prompts.get(self.reasoning_mode, self.reasoning_prompts["simple"])
+            user_message = reasoning_prompt + message
+        else:
+            user_message = message
+        
+        messages.append({"role": "user", "content": user_message})
+        
+        try:
+            # Check if this is a GPT-5 model that might need non-streaming
+            use_streaming = True
+            if self.current_model.startswith('gpt-5'):
+                # For GPT-5 models, we'll try streaming first but fallback to non-streaming
+                pass
+            
+            # Prepare parameters for OpenAI API call
+            params = {
+                "model": self.current_model,
+                "messages": messages,
+                "stream": use_streaming
+            }
+            
+            # GPT-5 models have strict parameter requirements
+            if self.current_model.startswith('gpt-5'):
+                # Only use default temperature for GPT-5 models
+                params["max_completion_tokens"] = 2048
+            else:
+                # Other models support custom temperature
+                params["temperature"] = 0.7
+                # Use correct parameter name based on model
+                if self.current_model.startswith(('gpt-4o', 'chatgpt-4o')):
+                    params["max_completion_tokens"] = 2048
+                else:
+                    params["max_tokens"] = 2048
+            
+            try:
+                # Send request to OpenAI with streaming
+                response = self.openai_client.chat.completions.create(**params)
+                
+                # Process streaming response
+                ai_response = ""
+                for chunk in response:
+                    if chunk.choices[0].delta.content is not None:
+                        content = chunk.choices[0].delta.content
+                        ai_response += content
+                        # Update the last message in history (assistant's response)
+                        history[-1]["content"] = ai_response
+                        yield "", history, f"🔄 Streaming from OpenAI: {self.current_model}"
+                
+                # Add final response to conversation history
+                self.conversation_history.append({"role": "assistant", "content": ai_response})
+                yield "", history, f"✅ Response completed using OpenAI: {self.current_model}"
+                
+            except Exception as stream_error:
+                # Check if it's a streaming-related error for GPT-5 models
+                error_msg = str(stream_error)
+                if (self.current_model.startswith('gpt-5') and 
+                    ('stream' in error_msg.lower() or 'organization' in error_msg.lower())):
+                    
+                    # Fallback to non-streaming for GPT-5 models
+                    yield "", history, f"🔄 Streaming not available for {self.current_model}, using non-streaming mode..."
+                    
+                    # Remove stream parameter and try again
+                    params_no_stream = params.copy()
+                    params_no_stream["stream"] = False
+                    
+                    response = self.openai_client.chat.completions.create(**params_no_stream)
+                    ai_response = response.choices[0].message.content
+                    
+                    # Update history with complete response
+                    history[-1]["content"] = ai_response
+                    self.conversation_history.append({"role": "assistant", "content": ai_response})
+                    yield "", history, f"✅ Response completed using OpenAI: {self.current_model} (non-streaming)"
+                else:
+                    # Re-raise for other types of errors
+                    raise stream_error
+            
+        except Exception as e:
+            error_msg = f"OpenAI API error: {str(e)}"
+            history[-1]["content"] = f"❌ {error_msg}"
+            yield "", history, error_msg
+    
     def send_message_non_stream(self, message: str, history: List[Dict], backend: str, model: str, 
                                reasoning: bool, reasoning_mode: str) -> Tuple[str, List[Dict], str]:
         """Send message without streaming (collect full response first)"""
@@ -285,8 +434,12 @@ Question: """
         try:
             if self.backend == "ollama":
                 ai_response = self._get_ollama_response(message)
-            else:  # vllm
+            elif self.backend == "vllm":
                 ai_response = self._get_vllm_response(message)
+            elif self.backend == "openai":
+                ai_response = self._get_openai_response(message)
+            else:
+                return "", history, f"❌ Unknown backend: {self.backend}"
             
             # Add AI response to conversation history
             self.conversation_history.append({"role": "assistant", "content": ai_response})
@@ -365,6 +518,62 @@ Question: """
         if 'choices' in response_data and response_data['choices']:
             return response_data['choices'][0]['message']['content']
         return ""
+    
+    def _get_openai_response(self, message: str) -> str:
+        """Get complete response from OpenAI (non-streaming)"""
+        if not self.openai_client:
+            return """🔑 **OpenAI API Key Required**
+
+To use OpenAI models (GPT-4, GPT-5, etc.), please:
+
+1. **Get your API key** from: https://platform.openai.com/api-keys
+2. **Set the environment variable**:
+   ```bash
+   export OPENAI_API_KEY="your-api-key-here"
+   ```
+3. **Restart the web interface**
+
+💡 **Alternative**: Try the Ollama or vLLM backends which don't require API keys!"""
+        
+        # Prepare messages for OpenAI
+        messages = []
+        
+        # Add conversation history
+        for msg in self.conversation_history[:-1]:  # Exclude the current message we just added
+            messages.append(msg)
+        
+        # Add reasoning prompt if enabled
+        if self.show_reasoning:
+            reasoning_prompt = self.reasoning_prompts.get(self.reasoning_mode, self.reasoning_prompts["simple"])
+            user_message = reasoning_prompt + message
+        else:
+            user_message = message
+        
+        messages.append({"role": "user", "content": user_message})
+        
+        # Prepare parameters for OpenAI API call
+        params = {
+            "model": self.current_model,
+            "messages": messages
+        }
+        
+        # GPT-5 models have strict parameter requirements
+        if self.current_model.startswith('gpt-5'):
+            # Only use default temperature for GPT-5 models
+            params["max_completion_tokens"] = 2048
+        else:
+            # Other models support custom temperature
+            params["temperature"] = 0.7
+            # Use correct parameter name based on model
+            if self.current_model.startswith(('gpt-4o', 'chatgpt-4o')):
+                params["max_completion_tokens"] = 2048
+            else:
+                params["max_tokens"] = 2048
+        
+        # Send request to OpenAI
+        response = self.openai_client.chat.completions.create(**params)
+        
+        return response.choices[0].message.content
     
     def clear_conversation(self) -> Tuple[List[Dict], str]:
         """Clear conversation history"""
@@ -489,7 +698,12 @@ def create_gui():
     # Create Gradio interface
     with gr.Blocks(css=custom_css, title="LLM Chat GUI") as interface:
         gr.Markdown("# 🤖 LLM Chat GUI")
-        gr.Markdown("Web interface for chatting with Ollama and vLLM models")
+        if OPENAI_AVAILABLE and os.getenv("OPENAI_API_KEY"):
+            gr.Markdown("Web interface for chatting with Ollama, vLLM, and OpenAI models")
+        else:
+            gr.Markdown("Web interface for chatting with Ollama and vLLM models")
+            if OPENAI_AVAILABLE:
+                gr.Markdown("💡 *Set OPENAI_API_KEY environment variable to enable OpenAI integration*")
         
         with gr.Row():
             with gr.Column(scale=3):
@@ -524,11 +738,15 @@ def create_gui():
                 gr.Markdown("### ⚙️ Settings")
                 
                 # Backend selection
+                backend_choices = ["ollama", "vllm"]
+                if OPENAI_AVAILABLE:
+                    backend_choices.append("openai")
+                
                 backend_dropdown = gr.Dropdown(
-                    choices=["ollama", "vllm"],
+                    choices=backend_choices,
                     value="ollama",
                     label="Backend",
-                    info="Select LLM backend"
+                    info="Select LLM backend (OpenAI requires API key)"
                 )
                 
                 # Model selection (will be updated based on backend)
@@ -589,13 +807,27 @@ def create_gui():
         # Event handlers
         def handle_send(message, history, backend, model, reasoning, reasoning_mode, streaming):
             """Handle message sending with streaming support"""
-            if streaming:
-                # Use streaming generator
-                yield from chat.send_message_stream(message, history, backend, model, reasoning, reasoning_mode)
+            # Special handling for GPT-5 models
+            if backend == "openai" and model.startswith('gpt-5'):
+                # Add informational message for GPT-5 models
+                status_msg = f"💡 Using {model} - Streaming may auto-fallback to non-streaming mode if organization verification is required"
+                
+                if streaming:
+                    # Use streaming generator with GPT-5 fallback
+                    yield from chat.send_message_stream(message, history, backend, model, reasoning, reasoning_mode)
+                else:
+                    # Use non-streaming but wrap in generator for consistency
+                    result = chat.send_message_non_stream(message, history, backend, model, reasoning, reasoning_mode)
+                    yield result
             else:
-                # Use non-streaming but wrap in generator for consistency
-                result = chat.send_message_non_stream(message, history, backend, model, reasoning, reasoning_mode)
-                yield result
+                # Normal handling for other models
+                if streaming:
+                    # Use streaming generator
+                    yield from chat.send_message_stream(message, history, backend, model, reasoning, reasoning_mode)
+                else:
+                    # Use non-streaming but wrap in generator for consistency
+                    result = chat.send_message_non_stream(message, history, backend, model, reasoning, reasoning_mode)
+                    yield result
         
         def handle_clear():
             return chat.clear_conversation()

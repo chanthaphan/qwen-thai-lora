@@ -10,7 +10,7 @@ import sys
 from typing import List, Dict
 
 class VLLMChat:
-    def __init__(self, base_url: str = "http://localhost:8000", model: str = "Qwen/Qwen3-4B-Instruct-2507"):
+    def __init__(self, base_url: str = "http://localhost:8000", model: str = "thai-model"):
         self.base_url = base_url.rstrip('/')
         self.model = model
         self.chat_url = f"{self.base_url}/v1/chat/completions"
@@ -337,7 +337,7 @@ def print_help():
     print("  /quit      - Exit the chat")
     print()
 
-def handle_direct_prompt(prompt: str, base_url: str = "http://localhost:8000", model: str = "Qwen/Qwen3-4B-Instruct-2507"):
+def handle_direct_prompt(prompt: str, base_url: str = "http://localhost:8000", model: str = "thai-model"):
     """Handle direct prompt from command line arguments"""
     # Parse special flags from the prompt
     args = sys.argv[1:]
@@ -475,7 +475,8 @@ def main():
     if "❌" in conn_status:
         print("\n💡 Make sure your vLLM server is running:")
         print("llm-env/bin/python -m vllm.entrypoints.openai.api_server \\")
-        print("  --model Qwen/Qwen3-4B-Instruct-2507 \\")
+        print("  --model models/qwen_thai_merged \\")
+        print("  --served-model-name thai-model \\")
         print("  --host 0.0.0.0 --port 8000")
         return 1
     

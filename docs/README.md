@@ -1,14 +1,42 @@
-# Thai Language Fine-tuning with Qwen2.5 LoRA
+# 📚 Thai Model Project Documentation
 
-A Thai language fine-tuning project using Qwen2.5-1.5B-Instruct model with LoRA (Low-Rank Adaptation) for parameter-efficient training on Thai text summarization tasks.
+Welcome to the comprehensive documentation for the Thai Language Model project! This directory contains all technical documentation, implementation guides, and development resources.
 
-## 🚀 Features
+## 🎯 **Quick Navigation**
 
-- **Parameter-Efficient Fine-tuning**: Uses LoRA adapters to fine-tune only a small subset of model parameters
-- **Thai Text Processing**: Specialized for Thai language summarization tasks
-- **Memory Optimized**: Efficient training pipeline with gradient checkpointing and mixed precision
-- **Model Testing**: Includes evaluation scripts to test the fine-tuned model
-- **Multiple Chat Applications**: Comparison tools for different LLM backends (Ollama, vLLM)
+### **🚀 Getting Started**
+- [`../README.md`](../README.md) - Project overview and main features
+- [`../QUICK_START.md`](../QUICK_START.md) - 5-minute quick start guide
+- [`HOSTING_GUIDE.md`](HOSTING_GUIDE.md) - Production deployment guide
+
+### **🤖 AI Integration Guides**
+- [`OPENAI_INTEGRATION.md`](OPENAI_INTEGRATION.md) - OpenAI API integration
+- [`OPENAI_SETUP_GUIDE.md`](OPENAI_SETUP_GUIDE.md) - OpenAI configuration
+- [`OPENAI_IMPLEMENTATION_SUMMARY.md`](OPENAI_IMPLEMENTATION_SUMMARY.md) - Implementation details
+- [`OPENAI_WEB_INTEGRATION.md`](OPENAI_WEB_INTEGRATION.md) - Web interface integration
+
+### **💾 Database & Persistence**
+- [`POSTGRESQL_INTEGRATION.md`](POSTGRESQL_INTEGRATION.md) - PostgreSQL setup and integration
+- [`POSTGRES_IMPLEMENTATION_SUMMARY.md`](POSTGRES_IMPLEMENTATION_SUMMARY.md) - Database implementation
+- [`POSTGRES_SUCCESS.md`](POSTGRES_SUCCESS.md) - Successful implementation summary
+
+### **🛠️ Implementation & Development**
+- [`IMPLEMENTATION_SUMMARY.md`](IMPLEMENTATION_SUMMARY.md) - Complete project implementation
+- [`CHAT_FORMAT_FIX.md`](CHAT_FORMAT_FIX.md) - Gradio format compatibility fixes
+- [`CHAT_INTERFACE_TEST_SUCCESS.md`](CHAT_INTERFACE_TEST_SUCCESS.md) - Interface testing results
+- [`TRAINING_SUMMARY.md`](TRAINING_SUMMARY.md) - Model training documentation
+
+### **⚙️ System Management**
+- [`VLLM_MANAGEMENT.md`](VLLM_MANAGEMENT.md) - vLLM server management
+- [`MANAGE_RESTRUCTURE.md`](MANAGE_RESTRUCTURE.md) - Project restructuring guide
+
+## 🏗️ **Project Architecture**
+
+This Thai Language Model project features:
+- **Multi-Backend AI Support**: vLLM (Thai model), Ollama (local), OpenAI (cloud)
+- **Enterprise Database**: PostgreSQL-backed persistent chat history
+- **Modern Web Interface**: Gradio-based UI with session management
+- **Production Ready**: Docker containers, monitoring, deployment scripts
 
 ## 📋 Requirements
 

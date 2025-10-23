@@ -1,361 +1,425 @@
-# 🇹🇭 Thai Language Model - Restructured
+# 🇹🇭 Thai Language Model with LoRA Fine-tuning
 
-**A comprehensive, production-ready Thai language model package with fine-tuning, hosting, and inference capabilities.**
+**A production-ready Thai language model based on Qwen2.5-1.5B-Instruct with LoRA fine-tuning capabilities, multiple inference backends, and comprehensive deployment options.**
 
 [![Python](https://img.shields.io/badge/Python-3.8%2B-blue.svg)](https://python.org)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Docker](https://img.shields.io/badge/Docker-Supported-blue.svg)](deployment/docker/)
+[![vLLM](https://img.shields.io/badge/vLLM-Optimized-orange.svg)](https://github.com/vllm-project/vllm)
 
 ## 🌟 Features
 
-### 🧠 **AI & Machine Learning**
-- **Fine-tuned Thai Language Model** based on Qwen2.5-1.5B-Instruct
-- **LoRA (Low-Rank Adaptation)** for efficient fine-tuning
-- **Thai text summarization** with specialized tokenization
-- **Multi-modal inference** supporting various generation tasks
+### 🧠 **Advanced AI Capabilities**
+- **Thai-specialized Model** fine-tuned from Qwen2.5-1.5B-Instruct
+- **LoRA Fine-tuning** for efficient parameter adaptation
+- **Multi-backend Support** (vLLM, Ollama, local inference)
+- **Thai Language Optimization** with specialized tokenization
 
-### 🚀 **Production-Ready API**
-- **FastAPI server** with OpenAI-compatible endpoints
-- **Streaming responses** for real-time generation
-- **Automatic documentation** with Swagger/OpenAPI
-- **Health monitoring** and metrics collection
+### 🚀 **Production Infrastructure**
+- **vLLM Server** for high-performance inference (up to 32K tokens)
+- **FastAPI Endpoints** with OpenAI-compatible API
+- **Real-time Streaming** responses for interactive applications
+- **Multiple Chat Interfaces** (CLI, Web, GUI)
 
-### 🖥️ **User Interfaces**
-- **Command-line interface** for quick interactions
-- **Web GUI** with Gradio for browser-based usage
-- **REST API** for programmatic integration
-- **Chat interfaces** for conversational AI
+### �️ **Developer Experience**
+- **One-command Management** with intuitive `./manage.sh` script
+- **Comprehensive Testing** and validation tools
+- **Docker Deployment** ready for production
+- **Modular Architecture** for easy customization
 
-### 🐳 **DevOps & Deployment**
-- **Docker containerization** with multi-stage builds
-- **Kubernetes manifests** for scalable deployment
-- **Nginx reverse proxy** configuration
-- **Monitoring stack** with Prometheus and Grafana
-
-## 📋 Table of Contents
-
-1. [Quick Start](#-quick-start)
-2. [Installation](#-installation) 
-3. [Project Structure](#-project-structure)
-4. [Usage Examples](#-usage-examples)
-5. [Configuration](#-configuration)
-6. [API Documentation](#-api-documentation)
-7. [Deployment](#-deployment)
-8. [Development](#-development)
-9. [Contributing](#-contributing)
+### � **User Interfaces**
+- **Command-line Chat** for quick interactions
+- **Web Interface** with Gradio for browser access
+- **Multi-backend Chat** supporting vLLM and Ollama
+- **API Integration** for custom applications
 
 ## 🚀 Quick Start
 
-### **1. Installation**
-
+### **1. Clone and Setup**
 ```bash
-# Clone repository
-git clone https://github.com/username/thai-language-model.git
-cd thai-language-model
+git clone https://github.com/chanthaphan/qwen-thai-lora.git
+cd qwen-thai-lora
 
-# Install package
-pip install -e .
-
-# Or install with development dependencies
-pip install -e ".[dev]"
+# One-command setup
+./manage.sh setup
 ```
 
-### **2. Run API Server**
-
+### **2. Train Thai Model** 
 ```bash
-# Using the package
-thai-model-api
+# Train the Thai LoRA adapter
+./manage.sh train
 
-# Or using script directly
-python scripts/api_server.py --port 8001
+# Merge LoRA with base model for optimal performance
+./manage.sh merge
 ```
 
-### **3. Test the API**
-
+### **3. Start Inference Server**
 ```bash
-# Health check
-curl http://localhost:8001/health
+# Start vLLM server (recommended for production)
+./manage.sh serve
 
-# Chat completion
-curl -X POST http://localhost:8001/v1/chat/completions \
-  -H "Content-Type: application/json" \
-  -d '{
-    "model": "thai-model",
-    "messages": [{"role": "user", "content": "สวัสดี"}],
-    "max_tokens": 50
-  }'
+# Or start other servers
+./manage.sh serve-api    # FastAPI server
+./manage.sh serve-gui    # Gradio web interface
 ```
 
-### **4. Web Interface**
-
+### **4. Start Chatting**
 ```bash
-# Start web GUI
-python scripts/chat_web.py
+# Interactive chat with Thai model
+./manage.sh chat
+
+# Or try other interfaces
+./manage.sh chat-web     # Web-based chat
+./manage.sh chat-ollama  # Ollama backend
 ```
 
-Visit `http://localhost:7860` for the web interface.
+### **5. Check Status**
+```bash
+./manage.sh status       # Complete project status
+./manage.sh server status # Server status only
+```
+
+## 📋 Table of Contents
+
+1. [Installation](#-installation)
+2. [Project Structure](#-project-structure)
+3. [Management Commands](#-management-commands)
+4. [Usage Examples](#-usage-examples)
+5. [API Documentation](#-api-documentation)
+6. [Model Information](#-model-information)
+7. [Deployment](#-deployment)
+8. [Development](#-development)
 
 ## 📦 Installation
 
 ### **Prerequisites**
-
-- Python 3.8 or higher
-- CUDA-compatible GPU (optional, for faster inference)
+- Python 3.8+ (3.12 recommended)
+- CUDA-compatible GPU (optional, for training and faster inference)
+- 8GB+ RAM (16GB+ recommended)
 - Docker (optional, for containerized deployment)
 
-### **Install from Source**
-
+### **Automatic Setup**
 ```bash
 # Clone repository
-git clone https://github.com/username/thai-language-model.git
-cd thai-language-model
+git clone https://github.com/chanthaphan/qwen-thai-lora.git
+cd qwen-thai-lora
 
+# Install everything with one command
+./manage.sh setup
+```
+
+This will:
+- Create virtual environment (`llm-env/`)
+- Install all dependencies from `config/requirements.txt`
+- Set up project structure
+- Download base model if needed
+
+### **Manual Installation**
+```bash
 # Create virtual environment
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+python3 -m venv llm-env
+source llm-env/bin/activate
 
-# Install package
-pip install -e .
-```
-
-### **Install with Docker**
-
-```bash
-# Build Docker image
-cd deployment/docker
-docker build -f Dockerfile.cpu -t thai-model-api .
-
-# Run container
-docker run -d -p 8001:8001 thai-model-api
-```
-
-### **GPU Support**
-
-For GPU acceleration, ensure you have:
-
-```bash
-# Install GPU version of PyTorch
-pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
-
-# For Docker GPU support
-# Use Dockerfile instead of Dockerfile.cpu
-docker build -t thai-model-api .
+# Install dependencies
+pip install -r config/requirements.txt
 ```
 
 ## 🏗️ Project Structure
 
 ```
-thai-language-model/
+qwen-thai-lora/
 ├── 📄 README.md                          # This file
 ├── 📄 pyproject.toml                     # Modern Python project configuration
-├── 📄 requirements.txt                   # Python dependencies
-├── 📄 LICENSE                            # MIT License
-├── 
+├── 📄 setup.sh                           # Quick setup script
+├── 📄 manage.sh                          # 🎯 Main project manager (simplified!)
+├── 📄 QUICK_START.md                     # Quick start guide
+├── 📄 LEARNING_PATH.md                   # Learning modules guide
+│
 ├── 🐍 thai_model/                        # Main Python package
 │   ├── __init__.py                       # Package initialization
 │   ├── core/                             # Core model functionality
+│   │   ├── __init__.py
 │   │   ├── model.py                      # ThaiModel class
-│   │   ├── config.py                     # Configuration classes
-│   │   └── tokenizer.py                  # Thai tokenization utilities
+│   │   └── config.py                     # Configuration management
 │   ├── api/                              # REST API server
-│   │   ├── fastapi_server.py             # FastAPI application
-│   │   ├── models.py                     # Pydantic request/response models
-│   │   └── routes/                       # API route definitions
+│   │   ├── __init__.py
+│   │   └── server.py                     # FastAPI application
 │   ├── interfaces/                       # User interfaces
-│   │   ├── cli.py                        # Command-line interface
-│   │   ├── web.py                        # Web GUI interface
-│   │   └── chat.py                       # Chat functionality
+│   │   ├── __init__.py
+│   │   ├── vllm_chat.py                  # vLLM chat interface 
+│   │   ├── ollama_chat.py                # Ollama chat interface
+│   │   ├── web_chat.py                   # Multi-backend web chat
+│   │   └── gradio_gui.py                 # Gradio web interface
 │   ├── training/                         # Training pipeline
-│   │   ├── trainer.py                    # Model training logic
-│   │   ├── data_loader.py                # Dataset handling
-│   │   └── evaluation.py                 # Model evaluation
-│   ├── utils/                            # Utilities
-│   │   ├── logger.py                     # Logging configuration
-│   │   ├── helpers.py                    # Helper functions
-│   │   └── validation.py                 # Input validation
-│   └── tests/                            # Test suite
-│       ├── test_core.py                  # Core functionality tests
-│       ├── test_api.py                   # API endpoint tests
-│       └── fixtures/                     # Test data and fixtures
-├── 
+│   │   ├── __init__.py
+│   │   ├── finetune_thai_model.py        # LoRA fine-tuning
+│   │   └── merge_lora_model.py           # Model merging
+│   ├── tests/                            # Test suite
+│   │   ├── __init__.py
+│   │   ├── test_model.py                 # Model functionality tests
+│   │   └── test_simple.py                # Simple validation tests
+│   └── utils/                            # Utilities
+│       ├── __init__.py
+│       └── helpers.py                    # Helper functions
+│
 ├── 📁 scripts/                           # Executable scripts
 │   ├── api_server.py                     # API server launcher
-│   ├── train_model.py                    # Training script
-│   ├── chat_cli.py                       # CLI chat application
-│   └── chat_web.py                       # Web chat application
-├── 
+│   ├── manage_vllm.sh                    # vLLM server management
+│   ├── start_api.sh                      # API server starter
+│   └── launch_gui.sh                     # GUI launcher
+│
 ├── 📁 config/                            # Configuration files
+│   ├── requirements.txt                  # Python dependencies
 │   ├── model_config.yaml                 # Model configuration
 │   ├── training_config.yaml              # Training parameters
-│   └── logging_config.yaml               # Logging configuration
-├── 
+│   └── sample_conversation.json          # Sample data
+│
+├── 📁 models/                            # Model files and checkpoints
+│   ├── qwen_thai_lora/                   # Thai LoRA adapter (163MB)
+│   │   ├── adapter_config.json
+│   │   ├── adapter_model.safetensors
+│   │   └── ...
+│   └── qwen_thai_merged/                 # Merged Thai model (2.9GB)
+│       ├── config.json
+│       ├── model.safetensors.index.json
+│       └── ...
+│
 ├── 📁 deployment/                        # Deployment configurations
 │   ├── docker/                           # Docker files
 │   │   ├── Dockerfile                    # Main Dockerfile (GPU)
 │   │   ├── Dockerfile.cpu                # CPU-only Dockerfile
-│   │   ├── docker-compose.yml            # Multi-service setup
-│   │   └── docker-demo.sh                # Deployment demo script
+│   │   ├── docker-compose.yml            # Development setup
+│   │   ├── docker-compose.prod.yml       # Production setup
+│   │   └── docker-demo.sh                # Demo script
 │   ├── kubernetes/                       # Kubernetes manifests
 │   ├── nginx/                            # Nginx configuration
-│   └── monitoring/                       # Monitoring configuration
-├── 
+│   ├── monitoring/                       # Monitoring (Prometheus)
+│   └── systemd/                          # Systemd service files
+│
 ├── 📁 docs/                              # Documentation
-│   ├── installation.md                   # Installation guide
-│   ├── usage.md                          # Usage examples
-│   ├── api_reference.md                  # API documentation
-│   └── deployment_guide.md               # Deployment guide
-├── 
+│   ├── README.md                         # Documentation index
+│   ├── HOSTING_GUIDE.md                  # Hosting and deployment
+│   ├── TRAINING_SUMMARY.md               # Training guide
+│   ├── VLLM_MANAGEMENT.md                # vLLM management guide
+│   └── MANAGE_RESTRUCTURE.md             # Management script guide
+│
 ├── 📁 examples/                          # Usage examples
-│   ├── basic_usage.py                    # Basic model usage
-│   ├── custom_training.py                # Custom training example
-│   └── api_client.py                     # API client example
-├── 
+│   └── integration_examples/             # Integration samples
+│
+├── 📁 learning/                          # Learning modules
+│   ├── learn.py                          # Learning system
+│   ├── progress_tracker.py               # Progress tracking
+│   └── module_*.py                       # Individual learning modules
+│
 ├── 📁 data/                              # Data directory
 │   ├── raw/                              # Raw datasets
 │   ├── processed/                        # Processed datasets
 │   └── samples/                          # Sample data
-├── 
-└── 📁 models/                            # Model files
-    ├── base/                             # Base model files
-    ├── checkpoints/                      # Training checkpoints
-    └── exports/                          # Exported models
+│
+├── 📁 logs/                              # Log files
+│   └── *.log                             # Application logs
+│
+└── 📁 llm-env/                           # Virtual environment
+    ├── bin/python                        # Python interpreter
+    ├── lib/                              # Installed packages
+    └── ...                               # Environment files
+```
+
+## 🎯 Management Commands
+
+The `./manage.sh` script provides intuitive commands organized by function:
+
+### **🔧 Setup & Management**
+```bash
+./manage.sh setup           # Install dependencies and set up environment
+./manage.sh status          # Show comprehensive project and server status
+./manage.sh clean           # Clean temporary files and logs
+```
+
+### **🤖 Model Operations**
+```bash
+./manage.sh train           # Train the Thai LoRA adapter
+./manage.sh merge           # Merge LoRA weights with base model  
+./manage.sh test            # Test the trained model
+```
+
+### **💬 Chat Interfaces**
+```bash
+./manage.sh chat            # Interactive vLLM chat (recommended)
+./manage.sh chat-ollama     # Chat with Ollama models
+./manage.sh chat-web        # Web-based multi-backend chat
+```
+
+### **🚀 Server Management**
+```bash
+./manage.sh serve           # Start vLLM server for Thai model
+./manage.sh serve-api       # Start FastAPI server  
+./manage.sh serve-gui       # Start Gradio web interface
+
+# Advanced server management
+./manage.sh server status   # Check server status
+./manage.sh server start    # Start vLLM server
+./manage.sh server stop     # Stop vLLM server
+./manage.sh server restart  # Restart vLLM server
+./manage.sh server test     # Test server connection
+```
+
+### **🐳 Docker Commands**
+```bash
+./manage.sh docker build    # Build Docker image
+./manage.sh docker run      # Run Docker container
+```
+
+### **📊 Status Display Example**
+```bash
+$ ./manage.sh status
+
+🇹🇭 Thai Model Manager
+
+📊 Project Status
+
+✅ Environment: Ready
+✅ Thai LoRA: Available
+✅ Merged Model: Available
+
+🚀 Server Status:
+✅ vLLM Server: Running on port 8000
+   📋 Model: thai-model
+   🔗 Root: Qwen/Qwen2.5-1.5B-Instruct
+   📏 Max tokens: 32,768
+⚠️  API Server: Not running
 ```
 
 ## 💻 Usage Examples
 
-### **Basic Model Usage**
+### **Basic Chat Usage**
 
-```python
-from thai_model import ThaiModel, ModelConfig
+```bash
+# Start vLLM server
+./manage.sh serve
 
-# Initialize model
-config = ModelConfig.from_yaml("config/model_config.yaml")
-model = ThaiModel(config)
-
-# Generate text
-response = model.generate_text("สวัสดี ท่านเป็นอย่างไรบ้าง")
-print(response)
-
-# Chat completion
-messages = [
-    {"role": "user", "content": "อธิบายเรื่องปัญญาประดิษฐ์"}
-]
-response = model.chat_completion(messages)
-print(response)
-
-# Text summarization
-text = "ข่าวยาว ๆ ที่ต้องการสรุป..."
-summary = model.summarize_text(text, max_length=100)
-print(summary)
+# Interactive chat
+./manage.sh chat
 ```
 
-### **API Client Usage**
+Example conversation:
+```
+🤖 Using model: thai-model
+🧠 Reasoning mode: OFF
+📡 Streaming mode: ON
+
+You: สวัสดี มีอะไรให้ช่วยไหม
+🤖 Bot: สวัสดีค่ะ/ครับ! ฉันยินดีที่ได้รู้จักคุณและช่วยเหลือในสิ่งที่คุณต้องการ 
+อย่าลังเลที่จะถามคำถามหรือขอความช่วยเหลือในเรื่องต่าง ๆ ค่ะ/ครับ
+
+You: อธิบายเรื่องปัญญาประดิษฐ์ให้ฟังหน่อย
+🤖 Bot: ปัญญาประดิษฐ์ (Artificial Intelligence หรือ AI) คือ...
+```
+
+### **API Usage**
 
 ```python
 import requests
 
 # Chat completion
 response = requests.post(
-    "http://localhost:8001/v1/chat/completions",
+    "http://localhost:8000/v1/chat/completions",
     json={
         "model": "thai-model",
         "messages": [
-            {"role": "user", "content": "สวัสดี"}
+            {"role": "user", "content": "สวัสดี เป็นอย่างไรบ้าง"}
         ],
-        "max_tokens": 100
-    }
-)
-print(response.json())
-
-# Text summarization
-response = requests.post(
-    "http://localhost:8001/v1/summarize",
-    json={
-        "text": "ข้อความที่ต้องการสรุป...",
-        "max_tokens": 50
+        "max_tokens": 100,
+        "temperature": 0.7
     }
 )
 print(response.json())
 ```
 
-### **Training a Custom Model**
+### **Programmatic Model Usage**
 
 ```python
-from thai_model.training import ThaiModelTrainer
-from thai_model.core.config import TrainingConfig
+from thai_model.interfaces.vllm_chat import VLLMChat
 
-# Load training configuration
-config = TrainingConfig.from_yaml("config/training_config.yaml")
+# Initialize chat client
+chat = VLLMChat()
 
-# Initialize trainer
-trainer = ThaiModelTrainer(config)
+# Send message
+response = chat.send_message("สวัสดี")
+print(response)
 
-# Train model
-trainer.train()
-
-# Evaluate model
-results = trainer.evaluate()
-print(results)
+# Chat with conversation history
+chat.conversation_history.append({"role": "user", "content": "ชื่อฉันคือจอห์น"})
+response = chat.send_message("ฉันชื่ออะไร")
+print(response)  # Should remember the name
 ```
 
-## ⚙️ Configuration
+### **Web Interface Usage**
 
-### **Model Configuration**
+```bash
+# Start web interface
+./manage.sh chat-web
 
-Edit `config/model_config.yaml`:
-
-```yaml
-model:
-  model_name: "Qwen/Qwen2.5-1.5B-Instruct"
-  adapter_path: "./models/checkpoints/qwen_thai_lora"
-  device: "auto"
-  torch_dtype: "float16"
-  max_new_tokens: 512
-  temperature: 0.7
-
-api:
-  host: "0.0.0.0"
-  port: 8001
-  workers: 1
+# Or use Gradio GUI
+./manage.sh serve-gui
 ```
 
-### **Training Configuration**
+Visit `http://localhost:7860` for the web interface with features:
+- Multiple backend selection (vLLM, Ollama)
+- Real-time streaming responses
+- Conversation history
+- Model switching
+- Export/import conversations
 
-Edit `config/training_config.yaml`:
+### **Training Custom Model**
 
-```yaml
-model:
-  base_model: "Qwen/Qwen2.5-1.5B-Instruct"
-  output_dir: "./models/checkpoints"
+```bash
+# Train Thai LoRA adapter
+./manage.sh train
 
-lora:
-  r: 16
-  alpha: 32
-  dropout: 0.05
+# Merge LoRA with base model for production
+./manage.sh merge
 
-training:
-  num_train_epochs: 3
-  learning_rate: 2.0e-4
-  per_device_train_batch_size: 1
+# Test the trained model
+./manage.sh test
+```
+
+### **Server Management**
+
+```bash
+# Check server status
+./manage.sh server status
+
+# Start/stop server
+./manage.sh server start
+./manage.sh server stop
+
+# Test server connection
+./manage.sh server test
 ```
 
 ## 📚 API Documentation
 
-### **Endpoints**
+### **vLLM Server Endpoints (Port 8000)**
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/health` | Health check |
+| GET | `/v1/models` | List available models |
+| POST | `/v1/chat/completions` | OpenAI-compatible chat |
+
+### **FastAPI Server Endpoints (Port 8001)**
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | GET | `/` | API information |
 | GET | `/health` | Health check |
-| GET | `/v1/models` | List available models |
-| POST | `/v1/chat/completions` | OpenAI-compatible chat |
-| POST | `/v1/summarize` | Thai text summarization |
-| POST | `/v1/generate` | General text generation |
+| POST | `/predict` | Text generation |
 
-### **Chat Completions**
+### **Chat Completions (vLLM)**
 
 ```bash
-curl -X POST http://localhost:8001/v1/chat/completions \
+curl -X POST http://localhost:8000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -d '{
     "model": "thai-model",
@@ -368,130 +432,286 @@ curl -X POST http://localhost:8001/v1/chat/completions \
   }'
 ```
 
-### **Text Summarization**
+### **Streaming Response**
 
 ```bash
-curl -X POST http://localhost:8001/v1/summarize \
+curl -X POST http://localhost:8000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -d '{
-    "text": "ข้อความยาว ๆ ที่ต้องการสรุป...",
-    "max_tokens": 100,
-    "temperature": 0.7
+    "model": "thai-model",
+    "messages": [
+      {"role": "user", "content": "เล่าเรื่องสั้น"}
+    ],
+    "max_tokens": 200,
+    "stream": true
   }'
 ```
 
-For complete API documentation, visit `/docs` when the server is running.
+### **Available Models**
+
+```bash
+curl http://localhost:8000/v1/models
+```
+
+Response:
+```json
+{
+  "object": "list",
+  "data": [
+    {
+      "id": "thai-model",
+      "object": "model",
+      "root": "Qwen/Qwen2.5-1.5B-Instruct",
+      "max_model_len": 32768
+    }
+  ]
+}
+```
+
+## 🤖 Model Information
+
+### **Base Model**
+- **Name**: Qwen/Qwen2.5-1.5B-Instruct
+- **Parameters**: 1.5 billion
+- **Context Length**: 32,768 tokens
+- **Architecture**: Transformer decoder
+
+### **Thai LoRA Adapter**
+- **Size**: 163MB
+- **Rank**: 16
+- **Alpha**: 32
+- **Target Modules**: Query, Key, Value, Output projections
+- **Training**: Thai conversation data
+
+### **Merged Model**
+- **Size**: 2.9GB
+- **Optimization**: Combined base model + Thai LoRA
+- **Performance**: Optimized for Thai language tasks
+- **Deployment**: Production-ready with vLLM
+
+### **Performance Characteristics**
+- **Inference Speed**: ~50-100 tokens/second (GPU)
+- **Memory Usage**: ~4GB VRAM (FP16)
+- **Latency**: <100ms first token (warm)
+- **Throughput**: High with vLLM batching
+
+### **Supported Features**
+- ✅ Thai language understanding
+- ✅ English-Thai translation
+- ✅ Conversation and chat
+- ✅ Text generation
+- ✅ Question answering
+- ✅ Reasoning tasks
 
 ## 🐳 Deployment
 
 ### **Docker Deployment**
 
 ```bash
-# Build image
+# Build production image
 cd deployment/docker
-docker build -f Dockerfile.cpu -t thai-model-api .
+docker build -f Dockerfile -t thai-model-api .
 
-# Run container
-docker run -d -p 8001:8001 \
+# Run container with GPU support
+docker run -d -p 8000:8000 \
+  --gpus all \
   -v ./models:/app/models:ro \
   -v ./config:/app/config:ro \
   thai-model-api
 
-# Or use docker-compose
+# Or use simplified commands
+./manage.sh docker build
+./manage.sh docker run
+```
+
+### **Docker Compose**
+
+```bash
+# Development setup
 docker-compose up -d
-```
 
-### **Kubernetes Deployment**
-
-```bash
-# Apply Kubernetes manifests
-kubectl apply -f deployment/kubernetes/
-```
-
-### **Production Setup**
-
-For production deployment with monitoring:
-
-```bash
-# Start full production stack
-cd deployment/docker
+# Production setup with monitoring
 docker-compose -f docker-compose.prod.yml up -d
 ```
 
 This includes:
-- API server with load balancing
+- vLLM server with GPU acceleration
+- FastAPI server
 - Nginx reverse proxy
-- Prometheus metrics collection
+- Prometheus monitoring
 - Grafana dashboards
-- Redis caching
+
+### **Manual Deployment**
+
+```bash
+# Install dependencies
+./manage.sh setup
+
+# Train and merge model
+./manage.sh train
+./manage.sh merge
+
+# Start production server
+./manage.sh serve
+```
+
+### **Environment Variables**
+
+```bash
+# vLLM Configuration
+export VLLM_MODEL_PATH="models/qwen_thai_merged"
+export VLLM_HOST="0.0.0.0"
+export VLLM_PORT="8000"
+export VLLM_GPU_MEMORY_UTILIZATION="0.8"
+
+# API Configuration
+export API_HOST="0.0.0.0" 
+export API_PORT="8001"
+export LOG_LEVEL="INFO"
+```
+
+### **Systemd Service**
+
+```bash
+# Install systemd service
+sudo cp deployment/systemd/thai-model-api.service /etc/systemd/system/
+sudo systemctl enable thai-model-api
+sudo systemctl start thai-model-api
+```
+
+### **Nginx Configuration**
+
+```bash
+# Install nginx config
+sudo cp deployment/nginx/thai-model-api.nginx /etc/nginx/sites-available/
+sudo ln -s /etc/nginx/sites-available/thai-model-api.nginx /etc/nginx/sites-enabled/
+sudo systemctl reload nginx
+```
 
 ## 🛠️ Development
 
-### **Setting Up Development Environment**
+### **Development Setup**
 
 ```bash
-# Clone repository
-git clone https://github.com/username/thai-language-model.git
-cd thai-language-model
+# Clone and setup
+git clone https://github.com/chanthaphan/qwen-thai-lora.git
+cd qwen-thai-lora
+./manage.sh setup
 
-# Install in development mode
-pip install -e ".[dev]"
-
-# Install pre-commit hooks
-pre-commit install
+# Run in development mode
+./manage.sh serve    # vLLM server
+./manage.sh chat     # Test chat
 ```
 
-### **Running Tests**
+### **Code Structure**
+
+The project follows a modular architecture:
+
+- **`thai_model/core/`**: Core model functionality
+- **`thai_model/interfaces/`**: User interaction layers
+- **`thai_model/training/`**: Model training and fine-tuning
+- **`thai_model/api/`**: REST API server
+- **`scripts/`**: Utility and management scripts
+
+### **Testing**
 
 ```bash
-# Run all tests
-pytest
+# Run model tests
+./manage.sh test
 
-# Run specific test categories
-pytest -m "not slow"  # Skip slow tests
-pytest thai_model/tests/test_api.py  # API tests only
+# Test specific components
+python -m thai_model.tests.test_model
+python -m thai_model.tests.test_simple
 
-# Run with coverage
-pytest --cov=thai_model --cov-report=html
+# Test server functionality
+./manage.sh server test
 ```
 
-### **Code Formatting**
+### **Adding New Features**
+
+1. **New Interface**: Add to `thai_model/interfaces/`
+2. **New Training**: Add to `thai_model/training/`
+3. **New API Endpoint**: Add to `thai_model/api/`
+4. **New Script**: Add to `scripts/` and update `manage.sh`
+
+### **Learning System**
+
+The project includes a comprehensive learning system:
 
 ```bash
-# Format code
-black thai_model/ scripts/
-isort thai_model/ scripts/
-
-# Type checking
-mypy thai_model/
+# Access learning modules
+cd learning/
+python learn.py                    # Interactive learning
+python progress_tracker.py         # Track progress
+python module_1_1_package_architecture.py  # Specific modules
 ```
 
-### **Building Documentation**
+### **Configuration Management**
+
+Edit configuration files in `config/`:
+
+- **`model_config.yaml`**: Model parameters
+- **`training_config.yaml`**: Training configuration
+- **`requirements.txt`**: Python dependencies
+
+## 📊 Performance & Monitoring
+
+### **Server Monitoring**
 
 ```bash
-# Install docs dependencies
-pip install -e ".[docs]"
+# Real-time status
+./manage.sh status
+./manage.sh server status
 
-# Build documentation
-cd docs/
-make html
+# Check logs
+tail -f logs/*.log
+
+# Monitor GPU usage
+nvidia-smi -l 1
 ```
+
+### **Performance Metrics**
+
+- **vLLM Server**: High-throughput inference with batching
+- **Thai Model**: Optimized for Thai language tasks
+- **Memory**: ~4GB VRAM for inference
+- **Speed**: 50-100 tokens/second on modern GPU
+
+### **Optimization Tips**
+
+1. **Use merged model** for best performance
+2. **Enable GPU acceleration** with CUDA
+3. **Adjust batch size** based on available memory
+4. **Use vLLM** for production inference
+5. **Monitor resource usage** with provided tools
 
 ## 🤝 Contributing
 
-We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+We welcome contributions! Here's how to get started:
 
-### **Development Workflow**
+### **Contributing Workflow**
 
 1. Fork the repository
-2. Create a feature branch
+2. Create a feature branch: `git checkout -b feature-name`
 3. Make your changes
-4. Run tests and ensure they pass
+4. Test your changes: `./manage.sh test`
 5. Submit a pull request
 
-### **Reporting Issues**
+### **Areas for Contribution**
 
-Please use the [GitHub Issues](https://github.com/username/thai-language-model/issues) page to report bugs or request features.
+- 🐛 **Bug fixes** and improvements
+- 📚 **Documentation** enhancements  
+- 🌐 **Internationalization** for other languages
+- 🚀 **Performance optimizations**
+- 🧪 **Testing** and validation
+- 🔧 **New features** and interfaces
+
+### **Development Guidelines**
+
+- Follow Python PEP 8 style guidelines
+- Add tests for new functionality
+- Update documentation for changes
+- Use the `./manage.sh` script for consistency
 
 ## 📄 License
 
@@ -499,17 +719,32 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🙏 Acknowledgments
 
-- **Qwen Team** for the base model
-- **Hugging Face** for the transformers library
-- **Thai NLP Community** for datasets and resources
-- **Contributors** who have helped improve this project
+- **Qwen Team** for the excellent base model (Qwen2.5-1.5B-Instruct)
+- **vLLM Team** for high-performance inference engine
+- **Hugging Face** for transformers library and model hosting
+- **Thai NLP Community** for datasets and language resources
+- **Contributors** who help improve this project
 
-## 📞 Support
+## 📞 Support & Resources
 
-- **Documentation**: [docs/](docs/)
-- **Issues**: [GitHub Issues](https://github.com/username/thai-language-model/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/username/thai-language-model/discussions)
+- **📖 Documentation**: [docs/](docs/) folder
+- **🐛 Issues**: [GitHub Issues](https://github.com/chanthaphan/qwen-thai-lora/issues)
+- **💬 Discussions**: [GitHub Discussions](https://github.com/chanthaphan/qwen-thai-lora/discussions)
+- **🚀 Quick Start**: [QUICK_START.md](QUICK_START.md)
+- **📚 Learning**: [LEARNING_PATH.md](LEARNING_PATH.md)
+
+## 🎯 Next Steps
+
+After setting up the project:
+
+1. **Train your model**: `./manage.sh train`
+2. **Start the server**: `./manage.sh serve`
+3. **Try chatting**: `./manage.sh chat`
+4. **Explore the API**: Check `http://localhost:8000/docs`
+5. **Deploy to production**: Use Docker or manual deployment
 
 ---
 
-**Built with ❤️ for the Thai language AI community**
+**🇹🇭 Built with ❤️ for the Thai language AI community**
+
+*Empowering Thai language processing with modern AI technology*

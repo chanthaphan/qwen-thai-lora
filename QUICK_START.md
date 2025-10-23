@@ -82,6 +82,20 @@ python scripts/api_server.py
 python scripts/start_api.sh
 ```
 
+### **Chat Applications with Database**
+```bash
+# Setup PostgreSQL for persistent chat history (one-time setup)
+./manage.sh setup-postgres
+
+# Start web chat with database persistence
+./manage.sh chat-web-db
+
+# Traditional file-based chat interfaces
+./manage.sh chat-web      # Web interface (file-based)
+./manage.sh chat-cli      # CLI interface
+./manage.sh chat-openai   # OpenAI chat interface
+```
+
 ## 🎯 **Learning Tips**
 
 ### **For Beginners**
@@ -130,6 +144,19 @@ python scripts/start_api.sh
 3. **Configuration Errors**: Check YAML syntax
    ```bash
    python -c "import yaml; yaml.safe_load(open('config/model_config.yaml'))"
+   ```
+
+4. **PostgreSQL Database Issues**: Check database setup
+   ```bash
+   # Test database connection
+   python -c "
+   from thai_model.core.chat_database import ChatDatabaseManager
+   db = ChatDatabaseManager()
+   print('✅ Database connection successful!')
+   "
+   
+   # Re-run setup if needed
+   ./manage.sh setup-postgres
    ```
 
 ### **Next Steps**

@@ -1,283 +1,459 @@
 #!/bin/bash
 # Thai Language Model Project Manager
-# Convenient script to manage common project tasks
+# Simple and intuitive project management
 
 set -e
 
 PROJECT_ROOT="/home/chanthaphan/project"
 VENV_PATH="$PROJECT_ROOT/llm-env/bin/python"
 
-# Colors for output
+# Colors
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
+CYAN='\033[0;36m'
 NC='\033[0m' # No Color
 
-# Function to print colored output
 print_color() {
     echo -e "${1}${2}${NC}"
 }
 
 print_header() {
     echo ""
-    print_color $BLUE "================================================"
-    print_color $BLUE "Thai Language Model Project Manager"
-    print_color $BLUE "================================================"
+    print_color $CYAN "🇹🇭 Thai Model Manager"
     echo ""
 }
 
 print_usage() {
-    echo "Usage: $0 [COMMAND]"
+    echo "Usage: ./manage.sh [COMMAND]"
     echo ""
-    echo "Commands:"
-    echo "  setup           Set up the project environment"
-    echo "  train           Run Thai model fine-tuning"
-    echo "  test            Run model tests"
-    echo "  test-simple     Run simple model test"
-    echo "  host-gui        Start Gradio web interface"
-    echo "  host-api        Start FastAPI server"
-    echo "  host-vllm       Start vLLM inference server"
-    echo "  chat-ollama     Start Ollama chat application"
-    echo "  chat-vllm       Start vLLM chat application"
-    echo "  chat-web        Start web-based multi-backend chat"
-    echo "  merge-model     Merge LoRA with base model"
-    echo "  docker-build    Build Docker image"
-    echo "  docker-run      Run Docker container"
-    echo "  status          Show project status"
-    echo "  clean           Clean temporary files"
-    echo "  help            Show this help message"
+    print_color $BLUE "🔧 Setup & Management:"
+    echo "  setup           Install dependencies and set up environment"
+    echo "  setup-openai    Set up OpenAI API key for GPT models"
+    echo "  setup-postgres  Set up PostgreSQL for chat history"
+    echo "  status          Show project and server status"
+    echo "  clean           Clean temporary files and logs"
+    echo ""
+    print_color $BLUE "🤖 Model Operations:"
+    echo "  train           Train the Thai model with LoRA"
+    echo "  merge           Merge LoRA weights with base model"
+    echo "  test            Test the trained model"
+    echo ""
+    print_color $BLUE "💬 Chat Interfaces:"
+    echo "  chat            Interactive vLLM chat (recommended)"
+    echo "  chat-ollama     Chat with Ollama models"
+    echo "  chat-openai     Chat with OpenAI models (GPT-4, etc.)"
+    echo "  chat-web        Web-based chat interface"
+    echo "  chat-web-db     Web interface with PostgreSQL persistence"
+    echo ""
+    print_color $BLUE "🚀 Servers:"
+    echo "  serve           Start vLLM server for Thai model"
+    echo "  serve-api       Start FastAPI server"
+    echo "  serve-gui       Start Gradio web interface"
+    echo ""
+    print_color $BLUE "📊 Server Management:"
+    echo "  server status   Check server status"
+    echo "  server start    Start vLLM server"
+    echo "  server stop     Stop vLLM server"
+    echo "  server restart  Restart vLLM server"
+    echo "  server test     Test server connection"
+    echo ""
+    print_color $BLUE "🐳 Docker:"
+    echo "  docker build    Build Docker image"
+    echo "  docker run      Run Docker container"
+    echo ""
+    print_color $YELLOW "Examples:"
+    echo "  ./manage.sh setup         # First time setup"
+    echo "  ./manage.sh train         # Train Thai model"
+    echo "  ./manage.sh serve         # Start server"
+    echo "  ./manage.sh chat          # Start chatting"
+    echo "  ./manage.sh chat-openai   # Chat with GPT-4 (requires API key)"
+    echo "  ./manage.sh chat-web      # Web interface with all backends"
+    echo "  ./manage.sh server status # Check if server is running"
     echo ""
 }
 
 check_environment() {
     if [ ! -f "$VENV_PATH" ]; then
-        print_color $RED "ERROR: Virtual environment not found at $VENV_PATH"
-        print_color $YELLOW "Please run: $0 setup"
+        print_color $RED "❌ Environment not set up"
+        print_color $YELLOW "💡 Run: ./manage.sh setup"
         exit 1
     fi
 }
 
+#===============================================================================
+# SETUP & MANAGEMENT
+#===============================================================================
+
 cmd_setup() {
-    print_color $BLUE "Setting up project environment..."
+    print_color $BLUE "🔧 Setting up environment..."
     
-    # Check if virtual environment exists
     if [ ! -d "$PROJECT_ROOT/llm-env" ]; then
-        print_color $YELLOW "Creating virtual environment..."
+        print_color $YELLOW "📦 Creating virtual environment..."
         cd $PROJECT_ROOT
         python3 -m venv llm-env
     fi
     
-    # Install dependencies
-    print_color $YELLOW "Installing dependencies..."
+    print_color $YELLOW "📥 Installing dependencies..."
     $VENV_PATH -m pip install --upgrade pip
     $VENV_PATH -m pip install -r config/requirements.txt
     
-    print_color $GREEN "Environment setup completed!"
+    print_color $GREEN "✅ Setup completed!"
+    print_color $CYAN "💡 Next steps:"
+    echo "  1. ./manage.sh train      # Train the model"
+    echo "  2. ./manage.sh serve      # Start server"
+    echo "  3. ./manage.sh chat       # Start chatting"
 }
 
-train() {
-    print_color $GREEN "Starting Thai model fine-tuning..."
+cmd_status() {
+    print_color $BLUE "📊 Project Status"
+    echo ""
+    
+    # Environment
+    if [ -f "$VENV_PATH" ]; then
+        print_color $GREEN "✅ Environment: Ready"
+    else
+        print_color $RED "❌ Environment: Not set up"
+    fi
+    
+    # Models
+    if [ -d "$PROJECT_ROOT/models/qwen_thai_lora" ]; then
+        print_color $GREEN "✅ Thai LoRA: Available"
+    else
+        print_color $YELLOW "⚠️  Thai LoRA: Not trained"
+    fi
+    
+    if [ -d "$PROJECT_ROOT/models/qwen_thai_merged" ]; then
+        print_color $GREEN "✅ Merged Model: Available"
+    else
+        print_color $YELLOW "⚠️  Merged Model: Not created"
+    fi
+    
+    # Server status
+    echo ""
+    print_color $BLUE "🚀 Server Status:"
+    if curl -s http://localhost:8000/health >/dev/null 2>&1; then
+        print_color $GREEN "✅ vLLM Server: Running on port 8000"
+        # Show model info
+        model_info=$(curl -s http://localhost:8000/v1/models | python3 -c "
+import json, sys
+try:
+    data = json.load(sys.stdin)
+    if data['data']:
+        model = data['data'][0]
+        print(f\"   📋 Model: {model['id']}\")
+        print(f\"   🔗 Root: {model['root']}\")
+        print(f\"   📏 Max tokens: {model['max_model_len']:,}\")
+except:
+    pass
+" 2>/dev/null)
+        echo "$model_info"
+    else
+        print_color $RED "❌ vLLM Server: Not running"
+    fi
+    
+    if curl -s http://localhost:8001/health >/dev/null 2>&1; then
+        print_color $GREEN "✅ API Server: Running on port 8001"
+    else
+        print_color $YELLOW "⚠️  API Server: Not running"
+    fi
+}
+
+cmd_clean() {
+    print_color $BLUE "🧹 Cleaning project..."
+    
+    # Clean Python cache
+    find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
+    find . -name "*.pyc" -delete 2>/dev/null || true
+    
+    # Clean logs
+    rm -f logs/*.log 2>/dev/null || true
+    
+    print_color $GREEN "✅ Cleanup completed!"
+}
+
+cmd_setup_openai() {
+    print_color $BLUE "🔑 Setting up OpenAI API key..."
+    cd "$PROJECT_ROOT"
+    
+    if [ -f "./scripts/setup/setup_openai_key.sh" ]; then
+        ./scripts/setup/setup_openai_key.sh
+    else
+        print_color $RED "❌ OpenAI setup script not found!"
+        echo "Please ensure setup_openai_key.sh exists in scripts/setup/ folder."
+        exit 1
+    fi
+}
+
+cmd_setup_postgres() {
+    print_color $BLUE "🐘 Setting up PostgreSQL for chat history..."
+    cd "$PROJECT_ROOT"
+    
+    if [ -f "./scripts/setup/setup_postgres_fixed.sh" ]; then
+        ./scripts/setup/setup_postgres_fixed.sh
+    elif [ -f "./scripts/setup/setup_postgres.sh" ]; then
+        ./scripts/setup/setup_postgres.sh
+    else
+        print_color $RED "❌ PostgreSQL setup script not found!"
+        echo "Please ensure setup_postgres_fixed.sh exists in scripts/setup/ folder."
+        exit 1
+    fi
+}
+
+#===============================================================================
+# MODEL OPERATIONS
+#===============================================================================
+
+cmd_train() {
+    print_color $BLUE "🏋️ Training Thai model..."
+    check_environment
     cd "$PROJECT_ROOT"
     $VENV_PATH -m thai_model.training.finetune_thai_model
 }
 
-test() {
-    print_color $GREEN "Running model tests..."
+cmd_merge() {
+    print_color $BLUE "🔀 Merging LoRA with base model..."
+    check_environment
+    cd "$PROJECT_ROOT"
+    $VENV_PATH -m thai_model.training.merge_lora_model
+}
+
+cmd_test() {
+    print_color $BLUE "🧪 Testing model..."
+    check_environment
     cd "$PROJECT_ROOT"
     $VENV_PATH -m thai_model.tests.test_model
 }
 
-test_simple() {
-    print_color $GREEN "Running simple model test..."
-    cd "$PROJECT_ROOT"
-    $VENV_PATH -m thai_model.tests.test_simple
-}
+#===============================================================================
+# CHAT INTERFACES
+#===============================================================================
 
-host_gui() {
-    print_color $GREEN "Starting Gradio web interface..."
-    cd "$PROJECT_ROOT"
-    $VENV_PATH -m thai_model.interfaces.gradio_gui
-}
-
-host_api() {
-    print_color $GREEN "Starting FastAPI server..."
-    cd "$PROJECT_ROOT"
-    $VENV_PATH scripts/api_server.py
-}
-
-cmd_host_vllm() {
-    print_color $BLUE "Starting vLLM inference server..."
+cmd_chat() {
+    print_color $BLUE "💬 Starting vLLM chat..."
     check_environment
-    cd $PROJECT_ROOT
-    
-    # Check if merged model exists
-    if [ -d "models/qwen_thai_lora_merged" ]; then
-        MODEL_PATH="models/qwen_thai_lora_merged"
-        print_color $GREEN "Using merged Thai model: $MODEL_PATH"
-    else
-        MODEL_PATH="Qwen/Qwen2.5-1.5B-Instruct"
-        print_color $YELLOW "WARNING: Using base model (LoRA not merged): $MODEL_PATH"
-        print_color $YELLOW "Run './manage.sh merge-model' first for Thai capabilities"
-    fi
-    
-    print_color $BLUE "Starting vLLM server on port 8000..."
-    print_color $YELLOW "This may take a few minutes to load the model..."
-    $VENV_PATH -m vllm.entrypoints.openai.api_server \
-        --model "$MODEL_PATH" \
-        --host 0.0.0.0 \
-        --port 8000 \
-        --served-model-name thai-model
-}
-
-chat_ollama() {
-    print_color $GREEN "Starting Ollama chat application..."
-    cd "$PROJECT_ROOT"
-    $VENV_PATH -m thai_model.interfaces.ollama_chat
-}
-
-chat_vllm() {
-    print_color $GREEN "Starting vLLM chat application..."
     cd "$PROJECT_ROOT"
     $VENV_PATH -m thai_model.interfaces.vllm_chat
 }
 
-chat_web() {
-    print_color $GREEN "Starting web-based multi-backend chat..."
+cmd_chat_ollama() {
+    print_color $BLUE "💬 Starting Ollama chat..."
+    check_environment
+    cd "$PROJECT_ROOT"
+    $VENV_PATH -m thai_model.interfaces.ollama_chat
+}
+
+cmd_chat_openai() {
+    print_color $BLUE "💬 Starting OpenAI chat..."
+    check_environment
+    
+    # Check if OpenAI API key is set
+    if [ -z "$OPENAI_API_KEY" ]; then
+        print_color $RED "❌ OpenAI API key not found"
+        print_color $YELLOW "💡 Please set your OpenAI API key:"
+        print_color $YELLOW "   export OPENAI_API_KEY='your-api-key-here'"
+        print_color $YELLOW "💡 Get your API key from: https://platform.openai.com/api-keys"
+        exit 1
+    fi
+    
+    cd "$PROJECT_ROOT"
+    $VENV_PATH -m thai_model.interfaces.openai_chat
+}
+
+cmd_chat_web() {
+    print_color $BLUE "💬 Starting web chat interface..."
+    check_environment
     cd "$PROJECT_ROOT"
     $VENV_PATH -m thai_model.interfaces.web_chat
 }
 
-cmd_merge_model() {
-    print_color $BLUE "Merging LoRA with base model..."
+cmd_chat_web_db() {
+    print_color $BLUE "💬 Starting web chat interface with PostgreSQL persistence..."
     check_environment
-    cd $PROJECT_ROOT
-    $VENV_PATH -m thai_model.training.merge_lora_model
+    
+    # Check if database is configured
+    if [ -f ".env" ]; then
+        source .env
+        print_color $GREEN "✅ Database configuration loaded"
+    else
+        print_color $YELLOW "⚠️  No .env file found - will use default database settings"
+        print_color $YELLOW "💡 Run './manage.sh setup-postgres' to configure database"
+    fi
+    
+    cd "$PROJECT_ROOT"
+    $VENV_PATH -m thai_model.interfaces.web_chat_db
 }
 
+#===============================================================================
+# SERVERS
+#===============================================================================
+
+cmd_serve() {
+    print_color $BLUE "🚀 Starting vLLM server..."
+    exec ./scripts/manage_vllm.sh start
+}
+
+cmd_serve_api() {
+    print_color $BLUE "🚀 Starting FastAPI server..."
+    check_environment
+    cd "$PROJECT_ROOT"
+    $VENV_PATH scripts/api_server.py
+}
+
+cmd_serve_gui() {
+    print_color $BLUE "🚀 Starting Gradio interface..."
+    check_environment
+    cd "$PROJECT_ROOT"
+    $VENV_PATH -m thai_model.interfaces.gradio_gui
+}
+
+#===============================================================================
+# SERVER MANAGEMENT
+#===============================================================================
+
+cmd_server() {
+    case "$1" in
+        status)
+            exec ./scripts/manage_vllm.sh status
+            ;;
+        start)
+            exec ./scripts/manage_vllm.sh start
+            ;;
+        stop)
+            exec ./scripts/manage_vllm.sh stop
+            ;;
+        restart)
+            exec ./scripts/manage_vllm.sh restart
+            ;;
+        test)
+            exec ./scripts/manage_vllm.sh test
+            ;;
+        *)
+            print_color $RED "❌ Unknown server command: $1"
+            print_color $YELLOW "💡 Available: status, start, stop, restart, test"
+            exit 1
+            ;;
+    esac
+}
+
+#===============================================================================
+# DOCKER
+#===============================================================================
+
 cmd_docker_build() {
-    print_color $BLUE "Building Docker image..."
+    print_color $BLUE "🐳 Building Docker image..."
     cd $PROJECT_ROOT
-    docker build -f deployment/Dockerfile -t thai-model-api .
-    print_color $GREEN "Docker image built successfully!"
+    docker build -f deployment/docker/Dockerfile -t thai-model-api .
+    print_color $GREEN "✅ Docker image built!"
 }
 
 cmd_docker_run() {
-    print_color $BLUE "Running Docker container..."
+    print_color $BLUE "🐳 Running Docker container..."
     cd $PROJECT_ROOT
     docker run -p 8001:8001 --gpus all thai-model-api
 }
 
-cmd_status() {
-    print_color $BLUE "Project Status"
-    echo ""
-    
-    # Check virtual environment
-    if [ -f "$VENV_PATH" ]; then
-        print_color $GREEN "[OK] Virtual environment: Ready"
-    else
-        print_color $RED "[ERROR] Virtual environment: Not found"
-    fi
-    
-    # Check models
-    if [ -d "$PROJECT_ROOT/models/qwen_thai_lora" ]; then
-        print_color $GREEN "[OK] Thai model: Available"
-    else
-        print_color $YELLOW "[WARNING] Thai model: Not trained yet"
-    fi
-    
-    # Check dependencies
-    if [ -f "$PROJECT_ROOT/config/requirements.txt" ]; then
-        print_color $GREEN "[OK] Dependencies: Configured"
-    else
-        print_color $RED "[ERROR] Dependencies: Missing requirements.txt"
-    fi
-    
-    # Show structure
-    echo ""
-    print_color $BLUE "Project Structure:"
-    tree -L 2 $PROJECT_ROOT || ls -la $PROJECT_ROOT
-}
+#===============================================================================
+# MAIN COMMAND ROUTER
+#===============================================================================
 
-cmd_clean() {
-    print_color $BLUE "Cleaning temporary files..."
-    cd $PROJECT_ROOT
-    
-    # Remove Python cache
-    find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
-    find . -name "*.pyc" -delete 2>/dev/null || true
-    
-    # Remove temporary files
-    rm -rf .pytest_cache 2>/dev/null || true
-    rm -rf *.egg-info 2>/dev/null || true
-    
-    print_color $GREEN "Cleanup completed!"
-}
+# Show header for all commands except help
+if [[ "$1" != "help" && "$1" != "" ]]; then
+    print_header
+fi
 
-# Main command handling
-case "${1:-help}" in
+case "$1" in
+    # Setup & Management
     setup)
-        print_header
         cmd_setup
         ;;
-    train)
-        print_header
-        train
+    setup-openai)
+        cmd_setup_openai
         ;;
-    test)
-        print_header
-        test
-        ;;
-    test-simple)
-        print_header
-        test_simple
-        ;;
-    host-gui)
-        print_header
-        host_gui
-        ;;
-    host-api)
-        print_header
-        host_api
-        ;;
-    host-vllm)
-        print_header
-        cmd_host_vllm
-        ;;
-    chat-ollama)
-        print_header
-        chat_ollama
-        ;;
-    chat-vllm)
-        print_header
-        chat_vllm
-        ;;
-    chat-web)
-        print_header
-        chat_web
-        ;;
-    merge-model)
-        print_header
-        cmd_merge_model
-        ;;
-    docker-build)
-        print_header
-        cmd_docker_build
-        ;;
-    docker-run)
-        print_header
-        cmd_docker_run
+    setup-postgres)
+        cmd_setup_postgres
         ;;
     status)
-        print_header
         cmd_status
         ;;
     clean)
-        print_header
         cmd_clean
         ;;
-    help|*)
+    
+    # Model Operations
+    train)
+        cmd_train
+        ;;
+    merge)
+        cmd_merge
+        ;;
+    test)
+        cmd_test
+        ;;
+    
+    # Chat Interfaces
+    chat)
+        cmd_chat
+        ;;
+    chat-ollama)
+        cmd_chat_ollama
+        ;;
+    chat-openai)
+        cmd_chat_openai
+        ;;
+    chat-web)
+        cmd_chat_web
+        ;;
+    chat-web-db)
+        cmd_chat_web_db
+        ;;
+    
+    # Servers
+    serve)
+        cmd_serve
+        ;;
+    serve-api)
+        cmd_serve_api
+        ;;
+    serve-gui)
+        cmd_serve_gui
+        ;;
+    
+    # Server Management
+    server)
+        shift
+        cmd_server "$@"
+        ;;
+    
+    # Docker
+    docker)
+        case "$2" in
+            build)
+                cmd_docker_build
+                ;;
+            run)
+                cmd_docker_run
+                ;;
+            *)
+                print_color $RED "❌ Unknown docker command: $2"
+                print_color $YELLOW "💡 Available: build, run"
+                exit 1
+                ;;
+        esac
+        ;;
+    
+    # Help and default
+    help|"")
         print_header
         print_usage
+        ;;
+    
+    *)
+        print_header
+        print_color $RED "❌ Unknown command: $1"
+        echo ""
+        print_usage
+        exit 1
         ;;
 esac
