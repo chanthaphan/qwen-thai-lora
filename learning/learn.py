@@ -80,7 +80,22 @@ This interactive learning system will guide you through mastering:
         "8": {
             "title": "🏭 Module 4.2: Production Deployment",
             "script": "module_4_2_deployment.py",
-            "description": "DevOps, monitoring, and scaling (Coming Soon)"
+            "description": "DevOps, monitoring, and scaling strategies"
+        },
+        "9": {
+            "title": "⚡ Module 5.1: Performance Optimization",
+            "script": "module_5_1_performance_optimization.py",
+            "description": "GPU optimization, batching, caching, and profiling"
+        },
+        "10": {
+            "title": "📊 Module 5.2: Monitoring & Observability",
+            "script": "module_5_2_monitoring_observability.py",
+            "description": "Metrics, logging, tracing, and health monitoring"
+        },
+        "n": {
+            "title": "🎯 Run Next Module",
+            "script": "run_next_module.py",
+            "description": "Automatically run the next unfinished module"
         },
         "p": {
             "title": "📊 Progress Tracker",
@@ -106,7 +121,7 @@ This interactive learning system will guide you through mastering:
     print(f"\n  q. 🚪 Exit")
     
     while True:
-        choice = input(f"\n🎯 Select module (1-8, p, r, q): ").strip().lower()
+        choice = input(f"\n🎯 Select module (1-10, n, p, r, q): ").strip().lower()
         
         if choice == 'q':
             print(f"\n👋 Happy learning! Your Thai Model journey awaits!")
@@ -136,7 +151,7 @@ This interactive learning system will guide you through mastering:
                 print(f"❌ Module not implemented yet: {module['title']}")
                 
         else:
-            print(f"❌ Invalid choice. Please select 1-8, p, r, or q")
+            print(f"❌ Invalid choice. Please select 1-10, n, p, r, or q")
 
 if __name__ == "__main__":
     main()
